@@ -1,21 +1,50 @@
 const express = require('express');
-const app = express();
 const cors = require('cors');
-const port = 3000; // Change this to your desired port
+const { MongoClient } = require("mongodb");
 
-// const mongoose = require('mongoose');
-// mongoose.connect('<your-db-url>', { useNewUrlParser: true, useUnifiedTopology: true });
+const app = express();
+app.use(cors({
+  origin: "*",            // pozwól wszystkim domenom
+  methods: ["GET","POST"], 
+  allowedHeaders: ["Content-Type"]
+}));
+const serverPort = 3000;
+const uri = "mongodb://localhost:27017/";
+const client = new MongoClient(uri);
 
-// const db = mongoose.connection;
-// db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-// db.once('open', () => {
-//     console.log('Connected to MongoDB');
-// });
+let coll; // referencja do kolekcji
 
-app.listen(port, () => {
-console.log(`Go catch the server at PORT ${port}`)
-})
+async function startServer() {
+    try {
+        // najpierw łączymy się z bazą
+        await client.connect();
+        const db = client.db("test");
+        coll = db.collection("ludzie");
+        console.log("Połączono z MongoDB");
 
-app.get('/items', (req, res) => {
-    res.json({ message: 'Get all items' });
+        // dopiero potem odpalamy Expressa
+        app.listen(serverPort, () => {
+            console.log(`Serwer działa na http://localhost:${serverPort}`);
+        });
+    } catch (err) {
+        console.error("Błąd podczas startu:", err);
+        process.exit(1); // zamykamy proces jeśli nie udało się połączyć
+    }
+}
+
+app.get('/items', async (req, res) => {
+    try {
+        if (!coll) {
+            return res.status(500).send("Brak połączenia z MongoDB");
+        }
+
+        const items = await coll.find().toArray();
+        res.json(items);
+    } catch (err) {
+        console.error("Błąd w /items:", err.message);
+        res.status(500).send("Błąd serwera: " + err.message);
+    }
 });
+
+// uruchamiamy
+startServer();
