@@ -15,5 +15,10 @@
     "url": "https://github.com/marziel2001/backend/issues"
   },
   "homepage": "https://github.com/marziel2001/backend#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.0"
+  }
 }
