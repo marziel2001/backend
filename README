@@ -1,0 +1,5 @@
+## Uruchamianie Servera
+`npm run dev`
+
+## Endpointy
+> /items
