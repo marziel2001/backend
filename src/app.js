@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+
 const { MongoClient } = require("mongodb");
 
 const app = express();
@@ -14,14 +15,15 @@ const serverPort = 3000;
 const uri = "mongodb://localhost:27017/";
 const client = new MongoClient(uri);
 
-let coll; // referencja do kolekcji
+let peopleCollecion; // referencja do kolekcji
 
 async function startServer() {
   try {
     // najpierw łączymy się z bazą
     await client.connect();
     const db = client.db("test");
-    coll = db.collection("ludzie");
+    peopleCollection = db.collection("ludzie");
+    photoCollection = db.collection("zdjecia1");
     console.log("Połączono z MongoDB");
 
     // dopiero potem odpalamy Expressa
@@ -36,15 +38,24 @@ async function startServer() {
 
 app.get("/items", async (req, res) => {
   try {
-    if (!coll) {
+    if (!peopleCollecion) {
       return res.status(500).send("Brak połączenia z MongoDB");
     }
 
-    const items = await coll.find().toArray();
+    const items = await peopleCollecion.find().toArray();
     res.json(items);
   } catch (err) {
     console.error("Błąd w /items:", err.message);
     res.status(500).send("Błąd serwera: " + err.message);
+  }
+});
+
+app.get("/photos", async (req, res) => {
+  try {
+    const photos = await photoCollection.find().toArray();
+    res.json(photos);
+  } catch (err) {
+    res.status(500).send("Błąd serwera");
   }
 });
 
